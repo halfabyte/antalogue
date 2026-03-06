@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>antalogue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-0: #08090d;
+  --bg-1: #0e1017;
+  --bg-2: #14161e;
+  --bg-3: #1a1d28;
+  --bg-4: #222532;
+  --border: #2a2d3a;
+  --border-light: #353848;
+  --text-0: #e8eaf0;
+  --text-1: #b0b4c0;
+  --text-2: #787e92;
+  --accent: #00d4a1;
+  --accent-dim: #00d4a120;
+  --accent-mid: #00d4a140;
+  --danger: #ff5570;
+  --danger-dim: #ff557020;
+  --warn: #ffb84d;
+  --you-bg: #00d4a10d;
+  --stranger-bg: #6c7bff0d;
+  --stranger: #8b9aff;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --font-ui: 'Outfit', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --sidebar-w: 260px;
+  --header-h: 52px;
+}
+
+html, body { height: 100%; background: var(--bg-0); color: var(--text-0); font-family: var(--font-ui); }
+button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+input, textarea { font-family: inherit; outline: none; border: none; background: none; color: inherit; }
+
+/* ── Layout ─────────────────────────────────────────────────── */
+#app { display: flex; height: 100%; overflow: hidden; }
+
+.sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--bg-1); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.sidebar.right { border-right: none; border-left: 1px solid var(--border); }
+
+.sidebar-header { padding: 0 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; height: var(--header-h); min-height: var(--header-h); }
+.sidebar-header h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-2); }
+.sidebar-body { flex: 1; overflow-y: auto; padding: 8px; }
+
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header { height: var(--header-h); min-height: var(--header-h); background: var(--bg-1); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 12px; }
+.logo { font-family: var(--font-mono); font-size: 16px; font-weight: 600; color: var(--accent); letter-spacing: -.02em; }
+.header-status { font-size: 13px; color: var(--text-2); margin-left: auto; }
+
+/* ── Chat area ──────────────────────────────────────────────── */
+.chat-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; }
+
+.msg { padding: 8px 14px; border-radius: var(--radius); max-width: 80%; font-size: 14px; line-height: 1.55; word-break: break-word; font-family: var(--font-mono); font-weight: 400; align-self: flex-start; }
+.msg.you { background: var(--you-bg); border: 1px solid var(--accent-dim); color: var(--accent); }
+.msg.stranger { background: var(--stranger-bg); border: 1px solid #6c7bff18; color: var(--stranger); }
+.msg.system { align-self: center; background: var(--bg-3); color: var(--text-2); font-size: 12px; border: 1px solid var(--border); font-family: var(--font-ui); }
+.typing-indicator { font-size: 12px; color: var(--text-2); padding: 4px 20px; font-style: italic; min-height: 22px; }
+
+/* ── Input bar ──────────────────────────────────────────────── */
+.input-bar { padding: 12px 16px; background: var(--bg-1); border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-end; }
+.input-bar textarea { flex: 1; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 14px; color: var(--text-0); resize: none; min-height: 40px; max-height: 120px; overflow: hidden; font-family: var(--font-mono); line-height: 1.5; transition: border-color .15s; }
+.input-bar textarea:focus { border-color: var(--accent); }
+.input-bar textarea::placeholder { color: var(--text-2); }
+.input-bar .btn { min-height: 40px; display: flex; align-items: center; flex-shrink: 0; }
+
+.btn { padding: 8px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; transition: all .15s; }
+.btn-accent { background: var(--accent); color: #08090d; }
+.btn-accent:hover { filter: brightness(1.15); }
+.btn-accent:disabled { opacity: .4; cursor: default; filter: none; }
+.btn-ghost { background: var(--bg-3); color: var(--text-1); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg-4); border-color: var(--border-light); }
+.btn-danger { background: var(--danger-dim); color: var(--danger); border: 1px solid #ff557030; }
+.btn-danger:hover { background: #ff557030; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* ── Center state (searching / idle) ────────────────────────── */
+.center-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 32px; }
+.center-state h1 { font-family: var(--font-mono); font-size: 28px; color: var(--accent); font-weight: 600; }
+.center-state p { color: var(--text-2); font-size: 14px; max-width: 360px; text-align: center; line-height: 1.6; }
+
+.search-dots { display: flex; gap: 6px; }
+.search-dots span { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 1.2s ease-in-out infinite; }
+.search-dots span:nth-child(2) { animation-delay: .2s; }
+.search-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes pulse { 0%, 80%, 100% { opacity: .2; transform: scale(.8); } 40% { opacity: 1; transform: scale(1); } }
+
+/* ── Server cards ───────────────────────────────────────────── */
+.server-card { padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 6px; cursor: default; transition: all .15s; }
+.server-card:hover { border-color: var(--border-light); }
+.server-card .name { font-size: 13px; font-weight: 500; color: var(--text-0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.server-card .url { font-size: 11px; color: var(--text-2); font-family: var(--font-mono); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.server-card .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.dot-connected { background: var(--accent); box-shadow: 0 0 6px var(--accent-mid); }
+.dot-disconnected { background: var(--danger); }
+.dot-connecting { background: var(--warn); }
+.server-card .row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.server-card .online-count { font-size: 11px; color: var(--accent); font-family: var(--font-mono); white-space: nowrap; }
+.server-card .motd { font-size: 11px; color: var(--text-2); margin-top: 4px; line-height: 1.4; font-style: italic; }
+.server-card .remove-btn { background: none; color: var(--text-2); font-size: 16px; padding: 0 4px; line-height: 1; }
+.server-card .remove-btn:hover { color: var(--danger); }
+
+.add-server { display: flex; gap: 6px; padding: 8px; }
+.add-server input { flex: 1; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 10px; font-size: 12px; font-family: var(--font-mono); color: var(--text-0); }
+.add-server input::placeholder { color: var(--text-2); }
+.add-server input:focus { border-color: var(--accent); }
+
+/* ── History cards ──────────────────────────────────────────── */
+.history-card { padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 6px; cursor: pointer; transition: all .15s; }
+.history-card:hover { border-color: var(--accent-dim); background: var(--bg-2); }
+.history-card.active { border-color: var(--accent); background: var(--accent-dim); }
+.history-card .chat-id { font-size: 11px; font-family: var(--font-mono); color: var(--accent); }
+.history-card .preview { font-size: 12px; color: var(--text-2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-card .time { font-size: 10px; color: var(--text-2); margin-top: 3px; }
+
+.history-view { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.history-view .history-msgs { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.history-view .hmsg { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-family: var(--font-mono); line-height: 1.4; word-break: break-word; }
+.history-view .hmsg.you { background: var(--you-bg); color: var(--accent); align-self: flex-end; max-width: 85%; }
+.history-view .hmsg.stranger { background: var(--stranger-bg); color: var(--stranger); align-self: flex-start; max-width: 85%; }
+.history-back { padding: 8px; border-bottom: 1px solid var(--border); }
+
+/* ── Report modal ───────────────────────────────────────────── */
+.modal-overlay { position: fixed; inset: 0; background: #00000088; display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; width: 380px; max-width: 90vw; }
+.modal h3 { font-size: 16px; margin-bottom: 12px; }
+.modal textarea { width: 100%; background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; font-size: 13px; min-height: 80px; resize: vertical; margin-bottom: 12px; color: var(--text-0); }
+.modal .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ── Action bar ─────────────────────────────────────────────── */
+.action-bar { display: flex; gap: 8px; padding: 0 20px 12px; }
+
+/* ── Mobile toggle ──────────────────────────────────────────── */
+.mobile-toggle { display: none; background: none; color: var(--text-1); font-size: 20px; padding: 4px 8px; }
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .msg.you { align-self: flex-end; }
+  .sidebar { position: fixed; top: 0; bottom: 0; z-index: 50; transform: translateX(-100%); transition: transform .25s ease; }
+  .sidebar.right { transform: translateX(100%); right: 0; }
+  .sidebar.open { transform: translateX(0); }
+  .mobile-toggle { display: block; }
+  .mobile-overlay { position: fixed; inset: 0; background: #00000066; z-index: 40; display: none; }
+  .mobile-overlay.show { display: block; }
+}
+@media (max-width: 500px) {
+  .msg { max-width: 92%; font-size: 13px; }
+  .center-state h1 { font-size: 22px; }
+  :root { --sidebar-w: 240px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Left sidebar: servers -->
+  <div class="sidebar left" id="sidebarLeft">
+    <div class="sidebar-header">
+      <h2>Servers</h2>
+    </div>
+    <div class="add-server">
+      <input type="text" id="serverUrlInput" placeholder="antalogue.example.com" spellcheck="false">
+      <button class="btn btn-accent btn-sm" onclick="addServer()">+</button>
+    </div>
+    <div class="sidebar-body" id="serverList"></div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="header">
+      <button class="mobile-toggle" onclick="toggleSidebar('left')">☰</button>
+      <span class="logo">antalogue</span>
+      <span class="header-status" id="headerStatus">add a server to start</span>
+      <button class="mobile-toggle" onclick="toggleSidebar('right')">◷</button>
+    </div>
+
+    <!-- Idle state -->
+    <div class="center-state" id="idleState">
+      <h1>antalogue</h1>
+      <p>decentralised anonymous chat. add servers on the left, then find someone to talk to.</p>
+      <button class="btn btn-accent" id="findBtn" onclick="startSearch()" disabled>find someone</button>
+    </div>
+
+    <!-- Searching state -->
+    <div class="center-state" id="searchState" style="display:none">
+      <div class="search-dots"><span></span><span></span><span></span></div>
+      <p>searching across <span id="searchCount">0</span> server(s)…</p>
+      <button class="btn btn-ghost" onclick="cancelSearch()">cancel</button>
+    </div>
+
+    <!-- Chat state -->
+    <div class="chat-wrap" id="chatState" style="display:none">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="typing-indicator" id="typingIndicator"></div>
+      <div class="action-bar" id="actionBar">
+        <button class="btn btn-ghost btn-sm" id="skipFindBtn" onclick="onSkipFind()">skip ↻</button>
+        <button class="btn btn-danger btn-sm" id="reportBtn" onclick="openReport()">report</button>
+      </div>
+      <div class="input-bar">
+        <textarea id="msgInput" placeholder="say something…" rows="1" disabled></textarea>
+        <button class="btn btn-accent" id="sendBtn" onclick="sendMessage()" disabled>send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right sidebar: history -->
+  <div class="sidebar right" id="sidebarRight">
+    <div class="sidebar-header">
+      <h2>History</h2>
+      <button class="btn btn-ghost btn-sm" onclick="clearHistory()" style="font-size:11px">clear</button>
+    </div>
+    <div class="sidebar-body" id="historyList"></div>
+    <!-- History detail view (hidden by default) -->
+    <div class="history-view" id="historyView" style="display:none">
+      <div class="history-back">
+        <button class="btn btn-ghost btn-sm" onclick="closeHistoryView()">← back</button>
+      </div>
+      <div class="history-msgs" id="historyMessages"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Report modal -->
+<div class="modal-overlay" id="reportModal" style="display:none" onclick="closeReport(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>Report this chat</h3>
+    <textarea id="reportReason" placeholder="Describe the issue (optional)…"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeReport()">cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="submitReport()">report</button>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeSidebars()"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────
+const state = {
+  servers: JSON.parse(localStorage.getItem('ant_servers') || '[]'),
+  connections: {},      // url -> WebSocket
+  chatHistory: JSON.parse(localStorage.getItem('ant_history') || '[]'), // [{chatId, server, messages, time}]
+  currentChat: null,    // {chatId, serverUrl, messages}
+  excludeId: localStorage.getItem('ant_exclude') || '',
+  phase: 'idle',        // idle | searching | chatting
+  searchingOn: new Set(),
+  typingTimeout: null,
+};
+
+function save() {
+  localStorage.setItem('ant_servers', JSON.stringify(state.servers));
+  localStorage.setItem('ant_history', JSON.stringify(state.chatHistory.slice(-200)));
+  localStorage.setItem('ant_exclude', state.excludeId);
+}
+
+// ── Server management ──────────────────────────────────────────────
+function addServer() {
+  const input = document.getElementById('serverUrlInput');
+  let raw = input.value.trim();
+  if (!raw) return;
+  // Check if user explicitly specified a protocol
+  let explicitProtocol = '';
+  if (/^wss:\/\//i.test(raw)) explicitProtocol = 'wss';
+  else if (/^ws:\/\//i.test(raw)) explicitProtocol = 'ws';
+  // Strip any protocol and /ws suffix to get the bare domain
+  let domain = raw.replace(/^(wss?|https?):\/\//, '').replace(/\/ws\/?$/, '').replace(/\/+$/, '');
+  if (!domain) return;
+  // Build the WebSocket URL — use explicit protocol, or auto-detect from page
+  const protocol = explicitProtocol || (window.location.protocol === 'https:' ? 'wss' : 'ws');
+  const url = `${protocol}://${domain}/ws`;
+  if (state.servers.find(s => s.url === url)) { input.value = ''; return; }
+  state.servers.push({ url, domain, name: '', status: 'disconnected' });
+  save();
+  input.value = '';
+  connectServer(url);
+  renderServers();
+  updateFindButton();
+}
+
+function removeServer(url) {
+  const ws = state.connections[url];
+  if (ws) { ws.close(); delete state.connections[url]; }
+  state.servers = state.servers.filter(s => s.url !== url);
+  save();
+  renderServers();
+  updateFindButton();
+}
+
+function connectServer(url) {
+  if (state.connections[url]) return;
+  const srv = state.servers.find(s => s.url === url);
+  if (srv) srv.status = 'connecting';
+  renderServers();
+
+  let ws;
+  try { ws = new WebSocket(url); } catch { if (srv) srv.status = 'disconnected'; renderServers(); return; }
+  state.connections[url] = ws;
+
+  ws.onopen = () => {
+    if (srv) srv.status = 'connected';
+    renderServers();
+    updateFindButton();
+    // If currently searching, search on this server too
+    if (state.phase === 'searching') {
+      ws.send(JSON.stringify({ type: 'search', exclude_chat_id: state.excludeId }));
+      state.searchingOn.add(url);
+      document.getElementById('searchCount').textContent = state.searchingOn.size;
+    }
+  };
+
+  ws.onmessage = (e) => {
+    let data;
+    try { data = JSON.parse(e.data); } catch { return; }
+    handleMessage(url, data);
+  };
+
+  ws.onclose = () => {
+    delete state.connections[url];
+    if (srv) srv.status = 'disconnected';
+    state.searchingOn.delete(url);
+    renderServers();
+    updateFindButton();
+    // If was chatting on this server, end chat
+    if (state.currentChat && state.currentChat.serverUrl === url) {
+      endChat('Server disconnected.');
+    }
+    // Auto reconnect after 5s
+    setTimeout(() => {
+      if (state.servers.find(s => s.url === url)) connectServer(url);
+    }, 5000);
+  };
+
+  ws.onerror = () => {};
+}
+
+function handleMessage(serverUrl, data) {
+  const srv = state.servers.find(s => s.url === serverUrl);
+
+  switch (data.type) {
+    case 'server_info':
+      if (srv) { srv.name = data.name || ''; srv.online = data.online || 0; srv.motd = data.motd || ''; }
+      renderServers();
+      break;
+
+    case 'online_count':
+      if (srv) { srv.online = data.count || 0; }
+      renderServers();
+      break;
+
+    case 'searching':
+      // acknowledged
+      break;
+
+    case 'requeued':
+      // Partner rejected — only react if this is for our current handshake
+      if (state.phase === 'handshaking' && state.currentChat && state.currentChat.chatId === data.chat_id) {
+        state.currentChat = null;
+        state.phase = 'searching';
+        state.searchingOn.clear();
+        for (const s of state.servers) {
+          const w = state.connections[s.url];
+          if (w && w.readyState === 1) {
+            w.send(JSON.stringify({ type: 'search', exclude_chat_id: state.excludeId }));
+            state.searchingOn.add(s.url);
+          }
+        }
+        showPhase('searching');
+        document.getElementById('searchCount').textContent = state.searchingOn.size;
+      }
+      break;
+
+    case 'match_request':
+      if (state.phase !== 'searching') {
+        // Already matched on another server — reject so the partner gets requeued
+        const ws = state.connections[serverUrl];
+        if (ws) ws.send(JSON.stringify({ type: 'reject', chat_id: data.chat_id }));
+        return;
+      }
+      // Cancel search on all other servers
+      for (const u of state.searchingOn) {
+        if (u !== serverUrl) {
+          const ws = state.connections[u];
+          if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'cancel' }));
+        }
+      }
+      state.searchingOn.clear();
+      state.phase = 'handshaking';
+      state.currentChat = { chatId: data.chat_id, serverUrl, messages: [] };
+      state.excludeId = data.chat_id;
+      save();
+      // Accept the match
+      {
+        const ws = state.connections[serverUrl];
+        if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'accept', chat_id: data.chat_id }));
+      }
+      break;
+
+    case 'matched':
+      // Both clients accepted — start chatting
+      if (state.phase === 'handshaking' && state.currentChat && state.currentChat.chatId === data.chat_id) {
+        state.phase = 'chatting';
+        showChat();
+        addSystemMessage('Connected to a stranger. Say hello!');
+        notify('antalogue', 'Matched with a stranger!');
+      }
+      break;
+
+    case 'message':
+      if (state.currentChat && state.currentChat.chatId === data.chat_id && (state.phase === 'chatting' || state.phase === 'ended')) {
+        const isYou = data.sender === 'you';
+        state.currentChat.messages.push({ sender: isYou ? 'you' : 'stranger', content: data.content, time: Date.now() });
+        if (!isYou) appendChatBubble('stranger', data.content);
+        if (!isYou) notify('antalogue', data.content);
+        clearTyping();
+      }
+      break;
+
+    case 'typing':
+      showTyping();
+      break;
+
+    case 'partner_disconnected':
+      if (state.currentChat) {
+        addSystemMessage('Stranger disconnected.');
+        notify('antalogue', 'Stranger disconnected.');
+        finishChat();
+      }
+      break;
+
+    case 'report_ack':
+      addSystemMessage('Report submitted.');
+      break;
+
+    case 'error':
+      addSystemMessage(data.message || 'Server error.');
+      break;
+
+    case 'cancelled':
+      break;
+  }
+}
+
+// ── Search / match ─────────────────────────────────────────────────
+function startSearch() {
+  if (state.phase !== 'idle') return;
+  requestNotifPermission();
+  state.phase = 'searching';
+  state.searchingOn.clear();
+
+  for (const s of state.servers) {
+    const ws = state.connections[s.url];
+    if (ws && ws.readyState === 1) {
+      ws.send(JSON.stringify({ type: 'search', exclude_chat_id: state.excludeId }));
+      state.searchingOn.add(s.url);
+    }
+  }
+
+  document.getElementById('searchCount').textContent = state.searchingOn.size;
+  showPhase('searching');
+}
+
+function cancelSearch() {
+  for (const u of state.searchingOn) {
+    const ws = state.connections[u];
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'cancel' }));
+  }
+  state.searchingOn.clear();
+  state.phase = 'idle';
+  showPhase('idle');
+}
+
+function disconnectChat() {
+  if (!state.currentChat) return;
+  if (state.phase === 'handshaking') {
+    // Still in handshake — send reject, go back to idle
+    const ws = state.connections[state.currentChat.serverUrl];
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'reject', chat_id: state.currentChat.chatId }));
+    state.currentChat = null;
+    state.phase = 'idle';
+    showPhase('idle');
+    return;
+  }
+  if (state.phase !== 'chatting') return;
+  const ws = state.connections[state.currentChat.serverUrl];
+  if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'disconnect' }));
+  addSystemMessage('You disconnected.');
+  finishChat();
+}
+
+function finishChat() {
+  if (state.currentChat && state.currentChat.messages.length > 0) {
+    state.chatHistory.unshift({
+      chatId: state.currentChat.chatId,
+      server: state.currentChat.serverUrl,
+      messages: state.currentChat.messages,
+      time: Date.now(),
+    });
+    save();
+    renderHistory();
+  }
+  // Keep currentChat around so report still works
+  state.phase = 'ended';
+  document.getElementById('msgInput').disabled = true;
+  document.getElementById('sendBtn').disabled = true;
+  const btn = document.getElementById('skipFindBtn');
+  btn.textContent = 'find someone';
+  btn.className = 'btn btn-accent btn-sm';
+  updateStatus();
+}
+
+function endChat(reason) {
+  if (state.currentChat && state.phase === 'chatting') {
+    addSystemMessage(reason);
+    finishChat();
+  }
+}
+
+function onSkipFind() {
+  if (state.phase === 'chatting' || state.phase === 'handshaking') {
+    disconnectChat();
+  } else if (state.phase === 'ended') {
+    state.currentChat = null;
+    state.phase = 'idle';
+    startSearch();
+  }
+}
+
+// ── Messaging ──────────────────────────────────────────────────────
+function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const content = input.value.trim();
+  if (!content || !state.currentChat || state.phase !== 'chatting') return;
+  const ws = state.connections[state.currentChat.serverUrl];
+  if (!ws || ws.readyState !== 1) return;
+
+  ws.send(JSON.stringify({ type: 'message', content }));
+  appendChatBubble('you', content);
+  state.currentChat.messages.push({ sender: 'you', content, time: Date.now() });
+  input.value = '';
+  autoResize(input);
+}
+
+function addSystemMessage(text) {
+  const el = document.createElement('div');
+  el.className = 'msg system';
+  el.textContent = text;
+  document.getElementById('chatMessages').appendChild(el);
+  scrollChat();
+}
+
+function appendChatBubble(sender, content) {
+  const el = document.createElement('div');
+  el.className = `msg ${sender}`;
+  el.textContent = content;
+  document.getElementById('chatMessages').appendChild(el);
+  scrollChat();
+}
+
+function scrollChat() {
+  const el = document.getElementById('chatMessages');
+  el.scrollTop = el.scrollHeight;
+}
+
+function showTyping() {
+  document.getElementById('typingIndicator').textContent = 'stranger is typing…';
+  clearTimeout(state.typingTimeout);
+  state.typingTimeout = setTimeout(clearTyping, 3000);
+}
+
+function clearTyping() {
+  document.getElementById('typingIndicator').textContent = '';
+}
+
+// ── Reporting ──────────────────────────────────────────────────────
+function openReport() {
+  document.getElementById('reportModal').style.display = 'flex';
+  document.getElementById('reportReason').value = '';
+}
+
+function closeReport(e) {
+  if (e && e.target && e.target !== document.getElementById('reportModal')) return;
+  document.getElementById('reportModal').style.display = 'none';
+}
+
+function submitReport() {
+  if (!state.currentChat) return;
+  const reason = document.getElementById('reportReason').value.trim();
+  const ws = state.connections[state.currentChat.serverUrl];
+  if (ws && ws.readyState === 1) {
+    ws.send(JSON.stringify({ type: 'report', chat_id: state.currentChat.chatId, reason }));
+  }
+  document.getElementById('reportModal').style.display = 'none';
+}
+
+// ── UI rendering ───────────────────────────────────────────────────
+function showPhase(phase) {
+  document.getElementById('idleState').style.display = phase === 'idle' ? 'flex' : 'none';
+  document.getElementById('searchState').style.display = phase === 'searching' ? 'flex' : 'none';
+  document.getElementById('chatState').style.display = (phase === 'chatting' || phase === 'ended') ? 'flex' : 'none';
+  if (phase === 'chatting') {
+    document.getElementById('chatMessages').innerHTML = '';
+    document.getElementById('msgInput').disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+    const btn = document.getElementById('skipFindBtn');
+    btn.textContent = 'skip ↻';
+    btn.className = 'btn btn-ghost btn-sm';
+    document.getElementById('msgInput').focus();
+  } else if (phase !== 'ended') {
+    document.getElementById('msgInput').disabled = true;
+    document.getElementById('sendBtn').disabled = true;
+  }
+  updateStatus();
+}
+
+function showChat() { showPhase('chatting'); }
+
+function updateStatus() {
+  const el = document.getElementById('headerStatus');
+  const connected = state.servers.filter(s => s.status === 'connected').length;
+  if (state.phase === 'chatting') {
+    const srv = state.servers.find(s => s.url === state.currentChat?.serverUrl);
+    const display = srv?.domain || state.currentChat?.serverUrl?.replace(/^wss?:\/\//, '').replace(/\/ws$/, '') || '…';
+    el.textContent = `chatting on ${display}`;
+  }
+  else if (state.phase === 'ended') el.textContent = 'chat ended';
+  else if (state.phase === 'searching') el.textContent = `searching ${state.searchingOn.size} server(s)…`;
+  else el.textContent = connected ? `${connected} server(s) connected` : 'add a server to start';
+}
+
+function updateFindButton() {
+  const connected = state.servers.some(s => s.status === 'connected');
+  document.getElementById('findBtn').disabled = !connected;
+}
+
+function renderServers() {
+  const el = document.getElementById('serverList');
+  el.innerHTML = '';
+  for (const s of state.servers) {
+    const card = document.createElement('div');
+    card.className = 'server-card';
+    const dotClass = s.status === 'connected' ? 'dot-connected' : s.status === 'connecting' ? 'dot-connecting' : 'dot-disconnected';
+    const displayUrl = s.domain || s.url.replace(/^wss?:\/\//, '').replace(/\/ws\/?$/, '');
+    const onlineText = s.status === 'connected' && s.online != null ? `<span class="online-count">${s.online} online</span>` : '';
+    const motdHtml = s.motd ? `<div class="motd">${escapeHtml(s.motd)}</div>` : '';
+    card.innerHTML = `
+      <div class="row">
+        <span class="name"><span class="status-dot ${dotClass}"></span>${s.name || displayUrl}</span>
+        <button class="remove-btn" title="Remove">×</button>
+      </div>
+      <div class="row">
+        <span class="url">${s.name ? displayUrl : ''}</span>
+        ${onlineText}
+      </div>
+      ${motdHtml}
+    `;
+    card.querySelector('.remove-btn').onclick = (e) => { e.stopPropagation(); removeServer(s.url); };
+    el.appendChild(card);
+  }
+  updateStatus();
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  el.innerHTML = '';
+  if (!state.chatHistory.length) {
+    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-2);font-size:12px;">no chats yet</div>';
+    return;
+  }
+  for (let i = 0; i < state.chatHistory.length; i++) {
+    const h = state.chatHistory[i];
+    const card = document.createElement('div');
+    card.className = 'history-card';
+    const lastMsg = h.messages[h.messages.length - 1];
+    const preview = lastMsg ? `${lastMsg.sender}: ${lastMsg.content}` : '';
+    const time = new Date(h.time).toLocaleString();
+    card.innerHTML = `
+      <div class="chat-id">#${h.chatId}</div>
+      <div class="preview">${escapeHtml(preview)}</div>
+      <div class="time">${time}</div>
+    `;
+    card.onclick = () => viewHistory(i);
+    el.appendChild(card);
+  }
+}
+
+function viewHistory(index) {
+  const h = state.chatHistory[index];
+  if (!h) return;
+  document.getElementById('historyList').style.display = 'none';
+  const view = document.getElementById('historyView');
+  view.style.display = 'flex';
+  const msgs = document.getElementById('historyMessages');
+  msgs.innerHTML = '';
+  for (const m of h.messages) {
+    const el = document.createElement('div');
+    el.className = `hmsg ${m.sender}`;
+    el.textContent = m.content;
+    msgs.appendChild(el);
+  }
+}
+
+function closeHistoryView() {
+  document.getElementById('historyView').style.display = 'none';
+  document.getElementById('historyList').style.display = '';
+}
+
+function clearHistory() {
+  state.chatHistory = [];
+  save();
+  renderHistory();
+  closeHistoryView();
+}
+
+function escapeHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+// ── Mobile sidebars ────────────────────────────────────────────────
+function toggleSidebar(side) {
+  const sb = side === 'left' ? document.getElementById('sidebarLeft') : document.getElementById('sidebarRight');
+  const isOpen = sb.classList.contains('open');
+  closeSidebars();
+  if (!isOpen) {
+    sb.classList.add('open');
+    document.getElementById('mobileOverlay').classList.add('show');
+  }
+}
+
+function closeSidebars() {
+  document.getElementById('sidebarLeft').classList.remove('open');
+  document.getElementById('sidebarRight').classList.remove('open');
+  document.getElementById('mobileOverlay').classList.remove('show');
+}
+
+// ── Textarea auto-resize + keyboard ────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  const h = Math.min(el.scrollHeight, 120);
+  el.style.height = h + 'px';
+  el.style.overflow = el.scrollHeight > 120 ? 'auto' : 'hidden';
+}
+
+document.getElementById('msgInput').addEventListener('input', function() {
+  autoResize(this);
+  // Send typing indicator
+  if (state.currentChat) {
+    const ws = state.connections[state.currentChat.serverUrl];
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'typing' }));
+  }
+});
+
+document.getElementById('msgInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+document.getElementById('serverUrlInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') addServer();
+});
+
+// Esc to skip current chat or find someone new
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    // Don't trigger if modal is open
+    if (document.getElementById('reportModal').style.display === 'flex') {
+      closeReport();
+      return;
+    }
+    if (state.phase === 'chatting' || state.phase === 'ended' || state.phase === 'handshaking') {
+      onSkipFind();
+    }
+  }
+});
+
+// ── Notifications ─────────────────────────────────────────────────
+let tabVisible = true;
+let titleInterval = null;
+const baseTitle = 'antalogue';
+
+document.addEventListener('visibilitychange', () => {
+  tabVisible = !document.hidden;
+  if (tabVisible) {
+    // Clear title flash when user comes back
+    if (titleInterval) { clearInterval(titleInterval); titleInterval = null; }
+    document.title = baseTitle;
+  }
+});
+
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function notify(title, body) {
+  if (tabVisible) return;
+  // Flash the tab title
+  if (!titleInterval) {
+    let on = true;
+    titleInterval = setInterval(() => {
+      document.title = on ? '● new message' : baseTitle;
+      on = !on;
+    }, 1000);
+  }
+  // Browser notification
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    const n = new Notification(title, { body, tag: 'antalogue' });
+    n.onclick = () => { window.focus(); n.close(); };
+    setTimeout(() => n.close(), 5000);
+  } catch {}
+}
+
+// ── Init ───────────────────────────────────────────────────────────
+renderServers();
+renderHistory();
+updateFindButton();
+
+// Connect to all saved servers
+for (const s of state.servers) connectServer(s.url);
+</script>
+</body>
+</html>

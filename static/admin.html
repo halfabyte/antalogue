@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>antalogue · admin</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg-0: #08090d; --bg-1: #0e1017; --bg-2: #14161e; --bg-3: #1a1d28; --bg-4: #222532;
+  --border: #2a2d3a; --border-light: #353848;
+  --text-0: #e8eaf0; --text-1: #b0b4c0; --text-2: #787e92;
+  --accent: #00d4a1; --accent-dim: #00d4a120;
+  --danger: #ff5570; --danger-dim: #ff557020;
+  --warn: #ffb84d; --warn-dim: #ffb84d20;
+  --font-ui: 'Outfit', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+  --radius: 8px; --radius-lg: 12px;
+}
+html, body { height: 100%; background: var(--bg-0); color: var(--text-0); font-family: var(--font-ui); }
+button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+input, textarea, select { font-family: inherit; outline: none; border: none; background: none; color: inherit; }
+
+.btn { padding: 8px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-accent { background: var(--accent); color: #08090d; }
+.btn-accent:hover { filter: brightness(1.15); }
+.btn-ghost { background: var(--bg-3); color: var(--text-1); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg-4); }
+.btn-danger { background: var(--danger-dim); color: var(--danger); border: 1px solid #ff557030; }
+.btn-danger:hover { background: #ff557030; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* ── Login ────────────────────────────────────────────────── */
+#loginPage { display: flex; align-items: center; justify-content: center; height: 100%; }
+.login-box { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; width: 340px; }
+.login-box h1 { font-family: var(--font-mono); font-size: 20px; color: var(--accent); margin-bottom: 4px; }
+.login-box p { color: var(--text-2); font-size: 13px; margin-bottom: 20px; }
+.login-box .field { margin-bottom: 12px; }
+.login-box label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
+.login-box input { width: 100%; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; font-size: 14px; color: var(--text-0); }
+.login-box input:focus { border-color: var(--accent); }
+.login-error { color: var(--danger); font-size: 12px; margin-bottom: 8px; min-height: 16px; }
+
+/* ── Dashboard ────────────────────────────────────────────── */
+#dashboard { display: none; height: 100%; flex-direction: column; }
+.dash-header { background: var(--bg-1); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; gap: 16px; }
+.dash-header .logo { font-family: var(--font-mono); font-size: 16px; color: var(--accent); font-weight: 600; }
+.dash-header .role-badge { font-size: 11px; background: var(--accent-dim); color: var(--accent); padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+.dash-header .spacer { flex: 1; }
+.dash-header .user-info { font-size: 13px; color: var(--text-2); }
+
+.dash-body { flex: 1; display: flex; overflow: hidden; }
+
+/* ── Nav ──────────────────────────────────────────────────── */
+.dash-nav { width: 200px; background: var(--bg-1); border-right: 1px solid var(--border); padding: 12px 8px; display: flex; flex-direction: column; gap: 2px; }
+.nav-item { padding: 10px 14px; border-radius: var(--radius); font-size: 13px; color: var(--text-1); cursor: pointer; transition: all .15s; }
+.nav-item:hover { background: var(--bg-2); color: var(--text-0); }
+.nav-item.active { background: var(--accent-dim); color: var(--accent); }
+.nav-badge { float: right; background: var(--danger); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+
+/* ── Content ──────────────────────────────────────────────── */
+.dash-content { flex: 1; overflow-y: auto; padding: 24px; }
+.section-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+
+/* ── Stats ────────────────────────────────────────────────── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.stat-card .label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; }
+.stat-card .value { font-size: 24px; font-weight: 700; font-family: var(--font-mono); color: var(--accent); margin-top: 4px; }
+
+/* ── Table ────────────────────────────────────────────────── */
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th { text-align: left; padding: 10px 12px; background: var(--bg-2); color: var(--text-2); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); font-weight: 600; }
+.tbl td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: top; }
+.tbl tr:hover td { background: var(--bg-2); }
+.tbl .mono { font-family: var(--font-mono); font-size: 12px; }
+.tbl .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.badge-pending { background: var(--warn-dim); color: var(--warn); }
+.badge-resolved { background: var(--accent-dim); color: var(--accent); }
+.badge-dismissed { background: var(--bg-4); color: var(--text-2); }
+
+/* ── Messages viewer ──────────────────────────────────────── */
+.msg-viewer { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius); max-height: 400px; overflow-y: auto; padding: 12px; margin-top: 8px; }
+.msg-viewer .m { padding: 4px 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; }
+.msg-viewer .m .sender { font-weight: 600; }
+.msg-viewer .m .sender.s0 { color: var(--accent); }
+.msg-viewer .m .sender.s1 { color: #8b9aff; }
+
+/* ── Forms ────────────────────────────────────────────────── */
+.form-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: flex-end; flex-wrap: wrap; }
+.form-field { display: flex; flex-direction: column; gap: 4px; }
+.form-field label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; }
+.form-field input, .form-field select { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; font-size: 13px; color: var(--text-0); min-width: 140px; }
+.form-field input:focus, .form-field select:focus { border-color: var(--accent); }
+
+.empty-state { text-align: center; padding: 40px; color: var(--text-2); font-size: 14px; }
+
+@media (max-width: 700px) {
+  .dash-nav { width: 60px; }
+  .nav-item { font-size: 0; padding: 10px; text-align: center; }
+  .nav-item::first-letter { font-size: 14px; }
+  .nav-badge { display: none; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Login page -->
+<div id="loginPage">
+  <div class="login-box">
+    <h1>antalogue</h1>
+    <p>admin / moderator panel</p>
+    <div class="field"><label>Username</label><input id="loginUser" type="text" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password"></div>
+    <div class="login-error" id="loginError"></div>
+    <button class="btn btn-accent" style="width:100%" onclick="doLogin()">Log in</button>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="dash-header">
+    <span class="logo">antalogue</span>
+    <span class="role-badge" id="roleBadge"></span>
+    <span class="spacer"></span>
+    <span class="user-info" id="userInfo"></span>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">logout</button>
+  </div>
+  <div class="dash-body">
+    <div class="dash-nav" id="dashNav"></div>
+    <div class="dash-content" id="dashContent"></div>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+let token = sessionStorage.getItem('ant_admin_token') || '';
+let role = sessionStorage.getItem('ant_admin_role') || '';
+let username = sessionStorage.getItem('ant_admin_user') || '';
+let currentTab = 'overview';
+
+// ── Auth ───────────────────────────────────────────────────
+async function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!user || !pass) return;
+  try {
+    const res = await fetch(`${API}/api/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user, password: pass }),
+    });
+    if (!res.ok) { document.getElementById('loginError').textContent = 'Invalid credentials'; return; }
+    const data = await res.json();
+    token = data.token; role = data.role; username = data.username;
+    sessionStorage.setItem('ant_admin_token', token);
+    sessionStorage.setItem('ant_admin_role', role);
+    sessionStorage.setItem('ant_admin_user', username);
+    showDashboard();
+  } catch (e) { document.getElementById('loginError').textContent = 'Connection failed'; }
+}
+
+function doLogout() {
+  token = ''; role = ''; username = '';
+  sessionStorage.clear();
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+}
+
+function authHeaders() { return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }; }
+async function api(path, opts = {}) {
+  const res = await fetch(`${API}${path}`, { headers: authHeaders(), ...opts });
+  if (res.status === 401) { doLogout(); throw new Error('Unauthorized'); }
+  return res.json();
+}
+
+// ── Login on enter ─────────────────────────────────────────
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
+
+// ── Dashboard ──────────────────────────────────────────────
+function showDashboard() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'flex';
+  document.getElementById('roleBadge').textContent = role;
+  document.getElementById('userInfo').textContent = username;
+  renderNav();
+  switchTab('overview');
+}
+
+const tabs = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'reports', label: 'Reports' },
+  { id: 'sessions', label: 'Sessions' },
+  { id: 'bans', label: 'Bans' },
+  { id: 'users', label: 'Users', adminOnly: true },
+];
+
+function renderNav() {
+  const nav = document.getElementById('dashNav');
+  nav.innerHTML = '';
+  for (const t of tabs) {
+    if (t.adminOnly && role !== 'admin') continue;
+    const el = document.createElement('div');
+    el.className = `nav-item ${t.id === currentTab ? 'active' : ''}`;
+    el.textContent = t.label;
+    el.id = `nav-${t.id}`;
+    el.onclick = () => switchTab(t.id);
+    nav.appendChild(el);
+  }
+}
+
+async function switchTab(tab) {
+  currentTab = tab;
+  renderNav();
+  const c = document.getElementById('dashContent');
+  c.innerHTML = '';
+  try {
+    if (tab === 'overview') await renderOverview(c);
+    else if (tab === 'reports') await renderReports(c);
+    else if (tab === 'sessions') await renderSessions(c);
+    else if (tab === 'bans') await renderBans(c);
+    else if (tab === 'users') await renderUsers(c);
+  } catch (e) { c.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`; }
+}
+
+// ── Overview ───────────────────────────────────────────────
+async function renderOverview(c) {
+  const s = await api('/api/stats');
+  c.innerHTML = `
+    <h2 class="section-title">Server Overview</h2>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">Connected</div><div class="value">${s.connected}</div></div>
+      <div class="stat-card"><div class="label">Waiting</div><div class="value">${s.waiting}</div></div>
+      <div class="stat-card"><div class="label">Active Chats</div><div class="value">${s.active_chats}</div></div>
+      <div class="stat-card"><div class="label">Total Chats</div><div class="value">${s.total_chats}</div></div>
+      <div class="stat-card"><div class="label">Messages</div><div class="value">${s.total_messages}</div></div>
+      <div class="stat-card"><div class="label">Pending Reports</div><div class="value">${s.pending_reports}</div></div>
+      <div class="stat-card"><div class="label">Active Bans</div><div class="value">${s.active_bans}</div></div>
+    </div>
+  `;
+}
+
+// ── Reports ────────────────────────────────────────────────
+async function renderReports(c) {
+  const reports = await api('/api/reports');
+  let html = `<h2 class="section-title">Reports</h2>`;
+  if (!reports.length) { c.innerHTML = html + '<div class="empty-state">No reports</div>'; return; }
+  html += `<table class="tbl"><thead><tr><th>ID</th><th>Chat</th><th>Reason</th><th>Status</th><th>Time</th><th>Actions</th></tr></thead><tbody>`;
+  for (const r of reports) {
+    const badge = r.status === 'pending' ? 'badge-pending' : r.status === 'resolved' ? 'badge-resolved' : 'badge-dismissed';
+    html += `<tr>
+      <td class="mono">${r.id}</td>
+      <td><a href="#" onclick="viewChat('${r.chat_id}');return false" class="mono" style="color:var(--accent)">${r.chat_id}</a></td>
+      <td>${esc(r.reason || '—')}</td>
+      <td><span class="badge ${badge}">${r.status}</span></td>
+      <td class="mono">${r.created_at}</td>
+      <td>
+        ${r.status === 'pending' ? `
+          <button class="btn btn-accent btn-sm" onclick="resolveReport(${r.id},'resolved')">resolve</button>
+          <button class="btn btn-ghost btn-sm" onclick="resolveReport(${r.id},'dismissed')">dismiss</button>
+          <button class="btn btn-danger btn-sm" onclick="banFromChat('${r.chat_id}')">ban sender</button>
+        ` : ''}
+      </td>
+    </tr>`;
+  }
+  html += '</tbody></table><div id="chatViewer"></div>';
+  c.innerHTML = html;
+}
+
+async function resolveReport(id, status) {
+  await api(`/api/reports/${id}/resolve`, { method: 'POST', body: JSON.stringify({ status }) });
+  switchTab('reports');
+}
+
+async function viewChat(chatId) {
+  const msgs = await api(`/api/messages/${chatId}`);
+  const viewer = document.getElementById('chatViewer');
+  if (!viewer) return;
+  let html = `<h3 style="margin-top:16px;font-size:14px;">Messages for #${chatId}</h3><div class="msg-viewer">`;
+  if (!msgs.length) { html += '<div style="color:var(--text-2)">No messages found</div>'; }
+  for (const m of msgs) {
+    html += `<div class="m"><span class="sender s${m.sender_index}">user${m.sender_index}:</span> ${esc(m.content)}</div>`;
+  }
+  html += '</div>';
+  viewer.innerHTML = html;
+}
+
+async function banFromChat(chatId) {
+  const idx = prompt('Ban which user? Enter 0 or 1:');
+  if (idx !== '0' && idx !== '1') return;
+  const reason = prompt('Reason:') || '';
+  const hours = prompt('Duration in hours (leave empty for permanent):');
+  await api('/api/bans', {
+    method: 'POST',
+    body: JSON.stringify({ chat_id: chatId, sender_index: parseInt(idx), reason, duration_hours: hours ? parseInt(hours) : null }),
+  });
+  alert('User banned.');
+  switchTab('reports');
+}
+
+// ── Sessions ───────────────────────────────────────────────
+async function renderSessions(c) {
+  const sessions = await api('/api/sessions');
+  let html = `<h2 class="section-title">Chat Sessions</h2>`;
+  if (!sessions.length) { c.innerHTML = html + '<div class="empty-state">No sessions</div>'; return; }
+  html += `<table class="tbl"><thead><tr><th>Chat ID</th><th>User 0</th><th>User 1</th><th>Active</th><th>Time</th><th></th></tr></thead><tbody>`;
+  for (const s of sessions) {
+    const ip0 = s.ip1_raw ? `${s.ip1_raw}` : `${s.ip1_hash.slice(0, 16)}…`;
+    const ip1 = s.ip2_raw ? `${s.ip2_raw}` : `${s.ip2_hash.slice(0, 16)}…`;
+    html += `<tr>
+      <td><a href="#" onclick="viewChat2('${s.chat_id}');return false" class="mono" style="color:var(--accent)">${s.chat_id}</a></td>
+      <td class="mono" style="font-size:11px">${ip0}</td>
+      <td class="mono" style="font-size:11px">${ip1}</td>
+      <td>${s.active ? '●' : '—'}</td>
+      <td class="mono">${s.created_at}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="viewChat2('${s.chat_id}')">view</button></td>
+    </tr>`;
+  }
+  html += '</tbody></table><div id="chatViewer2"></div>';
+  c.innerHTML = html;
+}
+
+async function viewChat2(chatId) {
+  const msgs = await api(`/api/messages/${chatId}`);
+  const viewer = document.getElementById('chatViewer2');
+  if (!viewer) return;
+  let html = `<h3 style="margin-top:16px;font-size:14px;">Messages for #${chatId}</h3><div class="msg-viewer">`;
+  for (const m of msgs) {
+    html += `<div class="m"><span class="sender s${m.sender_index}">user${m.sender_index}:</span> ${esc(m.content)}</div>`;
+  }
+  html += '</div>';
+  viewer.innerHTML = html;
+}
+
+// ── Bans ───────────────────────────────────────────────────
+async function renderBans(c) {
+  const bans = await api('/api/bans');
+  const isAdmin = role === 'admin';
+  let html = `<h2 class="section-title">Bans</h2>
+    <div class="form-row">
+      <div class="form-field"><label>${isAdmin ? 'IP Address' : 'IP Hash'}</label><input id="banIpInput" placeholder="${isAdmin ? '192.168.1.1' : 'full sha256 hash'}"></div>
+      <div class="form-field"><label>Reason</label><input id="banReason" placeholder="optional"></div>
+      <div class="form-field"><label>Duration (hrs)</label><input id="banDuration" type="number" placeholder="empty = perm"></div>
+      <button class="btn btn-danger btn-sm" style="margin-bottom:1px" onclick="addBan()">ban</button>
+    </div>`;
+  if (!bans.length) { c.innerHTML = html + '<div class="empty-state">No bans</div>'; return; }
+  html += `<table class="tbl"><thead><tr><th>ID</th><th>IP</th><th>Reason</th><th>By</th><th>Expires</th><th></th></tr></thead><tbody>`;
+  for (const b of bans) {
+    const ipDisplay = b.ip_raw ? `${esc(b.ip_raw)}` : `${b.ip_hash.slice(0, 24)}…`;
+    html += `<tr>
+      <td class="mono">${b.id}</td>
+      <td class="mono" style="font-size:11px">${ipDisplay}</td>
+      <td>${esc(b.reason || '—')}</td>
+      <td>${esc(b.banned_by || '—')}</td>
+      <td class="mono">${b.expires_at || 'permanent'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="removeBan(${b.id})">unban</button></td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  c.innerHTML = html;
+}
+
+async function addBan() {
+  const ip = document.getElementById('banIpInput').value.trim();
+  if (!ip) { alert(role === 'admin' ? 'Enter an IP address' : 'Enter an IP hash'); return; }
+  const reason = document.getElementById('banReason').value.trim();
+  const dur = document.getElementById('banDuration').value;
+  const body = { reason, duration_hours: dur ? parseInt(dur) : null };
+  if (role === 'admin') {
+    body.ip_raw_input = ip;
+  } else {
+    body.ip_hash = ip;
+  }
+  await api('/api/bans', { method: 'POST', body: JSON.stringify(body) });
+  switchTab('bans');
+}
+
+async function removeBan(id) {
+  if (!confirm('Remove this ban?')) return;
+  await fetch(`${API}/api/bans/${id}`, { method: 'DELETE', headers: authHeaders() });
+  switchTab('bans');
+}
+
+// ── Users (admin only) ─────────────────────────────────────
+async function renderUsers(c) {
+  const admins = await api('/api/admins');
+  let html = `<h2 class="section-title">Admin & Moderator Accounts</h2>
+    <div class="form-row">
+      <div class="form-field"><label>Username</label><input id="newUser"></div>
+      <div class="form-field"><label>Password</label><input id="newPass" type="password"></div>
+      <div class="form-field"><label>Role</label><select id="newRole"><option value="moderator">moderator</option><option value="admin">admin</option></select></div>
+      <button class="btn btn-accent btn-sm" style="margin-bottom:1px" onclick="addUser()">create</button>
+    </div>`;
+  html += `<table class="tbl"><thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th></th></tr></thead><tbody>`;
+  for (const a of admins) {
+    html += `<tr>
+      <td class="mono">${a.id}</td>
+      <td>${esc(a.username)}</td>
+      <td><span class="badge ${a.role === 'admin' ? 'badge-resolved' : 'badge-pending'}">${a.role}</span></td>
+      <td class="mono">${a.created_at}</td>
+      <td>${a.username !== username ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${a.id})">delete</button>` : ''}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  c.innerHTML = html;
+}
+
+async function addUser() {
+  const u = document.getElementById('newUser').value.trim();
+  const p = document.getElementById('newPass').value;
+  const r = document.getElementById('newRole').value;
+  if (!u || !p) { alert('Fill in username and password'); return; }
+  try {
+    await api('/api/admins', { method: 'POST', body: JSON.stringify({ username: u, password: p, role: r }) });
+    switchTab('users');
+  } catch (e) { alert('Failed: ' + e.message); }
+}
+
+async function deleteUser(id) {
+  if (!confirm('Delete this account?')) return;
+  await fetch(`${API}/api/admins/${id}`, { method: 'DELETE', headers: authHeaders() });
+  switchTab('users');
+}
+
+function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+// ── Auto-login if token stored ─────────────────────────────
+if (token) showDashboard();
+</script>
+</body>
+</html>

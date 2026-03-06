@@ -1,0 +1,31 @@
+# ─── Antalogue Server Configuration ───────────────────────────────────────────
+
+server:
+  host: "0.0.0.0"
+  port: 8765
+  name: "Antalogue Community"
+  motd: "Welcome. Be kind to strangers."
+
+# SQLite database path (relative to server.py)
+database: "antalogue.db"
+
+# Salt used to hash client IPs before storing — change this to something random!
+ip_salt: "change-me-to-something-random-and-secret"
+
+# Message / session retention
+cleanup:
+  retention_days: 7
+  interval_hours: 6
+
+# Default admin account created on first launch
+# CHANGE THE PASSWORD before deploying!
+admin:
+  username: "admin"
+  password: "changeme"
+
+# Maximum message length (characters)
+max_message_length: 5000
+
+# Rate limiting
+rate_limit:
+  messages_per_minute: 30
