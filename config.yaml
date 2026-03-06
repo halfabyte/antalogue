@@ -24,7 +24,7 @@ admin:
   password: "changeme"
 
 # Maximum message length (characters)
-max_message_length: 5000
+max_message_length: 2000
 
 # Rate limiting
 rate_limit:

@@ -91,7 +91,7 @@ admin:
   username: "admin"       # default admin (created on first run)
   password: "changeme"    # CHANGE THIS
 
-max_message_length: 5000  # character limit per message
+max_message_length: 2000  # character limit per message
 
 rate_limit:
   messages_per_minute: 30

@@ -354,7 +354,12 @@ function handleMessage(serverUrl, data) {
 
   switch (data.type) {
     case 'server_info':
-      if (srv) { srv.name = data.name || ''; srv.online = data.online || 0; srv.motd = data.motd || ''; }
+      if (srv) {
+        srv.name = data.name || '';
+        srv.online = data.online || 0;
+        srv.motd = data.motd || '';
+        srv.maxMsgLen = data.max_message_length || 2000;
+      }
       renderServers();
       break;
 
@@ -418,6 +423,11 @@ function handleMessage(serverUrl, data) {
         showChat();
         addSystemMessage('Connected to a stranger. Say hello!');
         notify('antalogue', 'Matched with a stranger!');
+        // Set message limit from the matched server
+        const matchedSrv = state.servers.find(s => s.url === state.currentChat.serverUrl);
+        if (matchedSrv && matchedSrv.maxMsgLen) {
+          document.getElementById('msgInput').maxLength = matchedSrv.maxMsgLen;
+        }
       }
       break;
 

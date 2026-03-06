@@ -273,6 +273,7 @@ async def ws_handler(request):
         "name": SERVER_NAME,
         "motd": MOTD,
         "online": len(ws_ip),
+        "max_message_length": MAX_MSG_LEN,
     })
 
     log.info("Client connected: %s", ip_h[:12])
