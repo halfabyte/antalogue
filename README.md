@@ -2,6 +2,10 @@
 
 Decentralised anonymous text chat. Anyone can run a server. Clients connect to multiple servers simultaneously and get matched with the first available stranger.
 
+## Use the Client
+
+[https://halfabyte.github.io/antalogue/static/index.html](https://halfabyte.github.io/antalogue/static/index.html)
+
 ## Quick Start
 
 ### 1. Install dependencies
@@ -141,4 +145,4 @@ Messages are JSON objects with a `type` field.
 
 ## License
 
-Do whatever you want with it.
+MIT
